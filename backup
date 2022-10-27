@@ -258,11 +258,8 @@ class TaxBand{
 		this.taxRate = taxRate;
 	}
 
-	public TaxBand(String name, Double lower, Double upper, Double rate) {
-		this.setTaxBandName(name);
-		this.setLowerBound(lower);
-		this.setUpperBound(upper);
-		this.setTaxRate(rate);	
+	public TaxBand(String name) {
+		this.setTaxBandName(name);	
 	}
 }
 
@@ -285,6 +282,24 @@ class TaxFreeLimit{
 	
 }
 
+class PersonalAllowance{
+	private static PersonalAllowance personalAllowance = null;
+	
+	static final Double ALLOWANCE = 12570.0;
+	
+	private PersonalAllowance(){
+		// Does nothing
+	}
+	
+	public static PersonalAllowance getInstance() {
+		if (personalAllowance == null) {
+			personalAllowance = new PersonalAllowance();
+		}
+		return personalAllowance;
+	}
+	
+}
+
 class Tax{
 	
 	private static Tax tax = null;
@@ -292,38 +307,22 @@ class Tax{
 	
 	public static Double calculateTax(Double salary) {
 		
-		Double tax = 0.0;
-		Double personalAllowance;
-		
-		if (salary > TaxFreeLimit.UPPERBOUND) {
-			personalAllowance = 0.0;
-		} else if(salary > TaxFreeLimit.LOWERBOUND) {
-			personalAllowance = Math.floor((salary - 100000.0)/2);
-		} else {
-			personalAllowance = taxBandList.get(0).getUpperBound();
-		}
-		
-		Double lowerBound = personalAllowance;
-		Double upperBound;
-
-		for(int i = 1; i <= taxBandList.size(); i++) {
-			upperBound = taxBandList.get(i).getUpperBound() + lowerBound;
-			if ((salary >= lowerBound) && (salary <= upperBound)) {
-				tax = (salary - lowerBound) * taxBandList.get(i).getTaxRate();
-			} else if (salary > upperBound) {
-				tax = (upperBound - lowerBound) * taxBandList.get(i).getTaxRate();
+		setBands(salary);
+		Double tax = 0.0;		
+			
+		for (TaxBand taxBand: taxBandList) {
+			if ((salary > taxBand.getLowerBound()) && (salary <= taxBand.getUpperBound())) {
+				tax = tax + ((salary - taxBand.getLowerBound()) * taxBand.getTaxRate());
+			} else if (salary > taxBand.getUpperBound()) {
+				tax = tax + ((taxBand.getUpperBound() - taxBand.getLowerBound()) * taxBand.getTaxRate());
 			}
-			if (salary <= upperBound) {
+			if (salary < taxBand.getLowerBound()) {
 				break;
 			}
-			lowerBound = upperBound + 1;
 		}
 		
-//		tax = tax + (taxBandList.get(1).getUpperBound() - personalAllowance);
-//		tax = tax + (taxBandList.get(2).getUpperBound() - (taxBandList.get(1).getUpperBound() - personalAllowance));
-//		
 		return tax;
-		}
+	}
 	
 	public static Double calculatePostTaxSalary(Double tax, Double salary) {
 		if (tax > salary) {
@@ -336,16 +335,42 @@ class Tax{
 		return salary - tax;
 	}
 	
+	private static Double calculatePersonalAllowance(Double salary) {
+		
+		if (salary > TaxFreeLimit.UPPERBOUND) {
+			return 0.0;
+		} else if(salary > TaxFreeLimit.LOWERBOUND) {
+			return Math.floor((salary - TaxFreeLimit.LOWERBOUND)/2);
+		} else {
+			return PersonalAllowance.ALLOWANCE;
+		}		
+	}
+	
+	private static void setBands(Double salary) {
+		
+		Double personalAllowance = calculatePersonalAllowance(salary);
+		setBand(0, 0.0, personalAllowance, 0.0);
+		setBand(1, personalAllowance, personalAllowance + 37700.0, 0.2);
+		setBand(2, personalAllowance + 37700.0, 150000.0, 0.4);
+		setBand(3, 150000.0, Double.MAX_VALUE, 0.45);
+	}
+	
+	private static void setBand(Integer element, Double lowerBound, Double upperBound, Double taxRate) {
+		taxBandList.get(element).setLowerBound(lowerBound);
+		taxBandList.get(element).setUpperBound(upperBound);
+		taxBandList.get(element).setTaxRate(taxRate);
+	}
+	
 	private static void populateTaxArrayList() {
 		
-		TaxBand personalAllowance = new TaxBand("Personal Allowance", 0.0, 12570.0, 0.0);
-		TaxBand basicRate = new TaxBand("Lower Rate", 12571.0, 50270.0, 0.2);
-		TaxBand higherRate = new TaxBand("Higher Rate", 50271.0, 150000.0, 0.4);
-		TaxBand additionalRate = new TaxBand("Additional Rate", 150001.0, Double.MAX_VALUE, 0.45);
-		taxBandList.add(personalAllowance);
+		TaxBand personalAllowance = new TaxBand("Personal Allowance");
+		TaxBand basicRate = new TaxBand("Lower Rate");
+		TaxBand higherRate = new TaxBand("Higher Rate");
+		TaxBand additionalRate = new TaxBand("Additional Rate");
+		taxBandList.add(personalAllowance); 
 		taxBandList.add(basicRate);
 		taxBandList.add(higherRate);
-		taxBandList.add(additionalRate);		
+		taxBandList.add(additionalRate);
 	}
 	
 	private Tax(){
@@ -363,72 +388,62 @@ class Tax{
 
 class Sort{
 	
+	static Integer[] toSortElementLocation;
+	static Double[] toSortValue;
+	
 	// A utility function to swap two elements
-    static void swap(int[] arr, int i, int j)
+    static void swap(int i, int j)
     {
-        int temp = arr[i];
-        arr[i] = arr[j];
-        arr[j] = temp;
+        int tempInt = toSortElementLocation[i];
+        toSortElementLocation[i] = toSortElementLocation[j];
+        toSortElementLocation[j] = tempInt;
+        Double tempDouble = toSortValue[i];
+        toSortValue[i] = toSortValue[j];
+        toSortValue[j] = tempDouble;
     }
   
-    /* This function takes last element as pivot, places
-       the pivot element at its correct position in sorted
-       array, and places all smaller (smaller than pivot)
-       to left of pivot and all greater elements to right
-       of pivot */
-    static int partition(int[] arr, int low, int high)
+    // QuickSort Partition function
+    static int partition(int low, int high)
     {
-  
-        // pivot
-        int pivot = arr[high];
-  
-        // Index of smaller element and
-        // indicates the right position
-        // of pivot found so far
+//    	System.out.println("Partitioned began with low: " + low + " and high: " + high);
+        Double pivot = toSortValue[high];
         int i = (low - 1);
   
-        for (int j = low; j <= high - 1; j++) {
-  
-            // If current element is smaller
-            // than the pivot
-            if (arr[j] < pivot) {
-  
-                // Increment index of
-                // smaller element
+        for (int j = low; j < high; j++) {
+        	
+            if (toSortValue[j] < pivot) {
                 i++;
-                swap(arr, i, j);
+                swap(i, j);
             }
         }
-        swap(arr, i + 1, high);
+        swap(i + 1, high);
         return (i + 1);
     }
   
-    /* The main function that implements QuickSort
-              arr[] --> Array to be sorted,
-              low --> Starting index,
-              high --> Ending index
-     */
-    static void quickSort(int[] arr, int low, int high)
+    static int bean = 0;
+    static void quickSort(int low, int high)
     {
+//    	bean++;
+//    	System.out.println("Bean counter: " + bean);
+//        System.out.println("Started quicksort with low: " + low + " and high: " + high);
         if (low < high) {
-  
-            // pi is partitioning index, arr[p]
-            // is now at right place
-            int pi = partition(arr, low, high);
-  
-            // Separately sort elements before
-            // partition and after partition
-            quickSort(arr, low, pi - 1);
-            quickSort(arr, pi + 1, high);
-        }
+            int partitionIndex = partition(low, high);
+//            System.out.println("Starting quicksort with low: " + low + " and partition index -1: " + (partitionIndex-1));
+            quickSort(low, partitionIndex - 1);
+//            System.out.println("Starting quicksort with partition index: " + (partitionIndex+1) + " and high: " + high);
+            quickSort(partitionIndex + 1, high);
+        } 
+//        else {
+//        	System.out.println("Did nothing.");
+//        }
     }
 	
 	
 	
 	public static ArrayList<Employee> sort(ArrayList<Employee> toSort, Integer type){
 		
-		Integer[] toSortElementLocation = new Integer[toSort.size()];
-		Double[] toSortValue = new Double[toSort.size()];
+		toSortElementLocation = new Integer[toSort.size()];
+		toSortValue = new Double[toSort.size()];
 
 		// Gather values to sort or raise invalid menu option error
 		if (type == 1) {
@@ -450,9 +465,18 @@ class Sort{
 			toSortElementLocation[i] = toSort.get(i).getEmployeeID() - 1;
 		}
 		
+		for (int i = 0; i < toSort.size(); i++) {
+			System.out.println(toSortElementLocation[i]);
+		}
+		
+		quickSort(0, toSortElementLocation.length - 1);
 		
 		for (int i = 0; i < toSort.size(); i++) {
-			System.out.println(toSortValue[i]);
+			System.out.println(toSortElementLocation[i]);
+		}
+		for (int i = 0; i < toSort.size(); i++) {
+			System.out.println();
+			System.out.println(toSort.get(toSortElementLocation[i]));
 		}
 		
 		
@@ -1039,10 +1063,10 @@ public class PayrollManagement {
 		newEmployee.setPostTaxSalary(Tax.calculatePostTaxSalary(tax, 50000.0));
 		employeeList.add(newEmployee);
 		
-		Employee newEmployee2 = new Employee(2,"Bob","Fisher",2,190000.0);
-		tax = Tax.calculateTax(190000.0);
+		Employee newEmployee2 = new Employee(2,"Bob","Fisher",2,165000.0);
+		tax = Tax.calculateTax(165000.0);
 		newEmployee2.setPayableTax(tax);
-		newEmployee2.setPostTaxSalary(Tax.calculatePostTaxSalary(tax, 190000.0));
+		newEmployee2.setPostTaxSalary(Tax.calculatePostTaxSalary(tax, 165000.0));
 		employeeList.add(newEmployee2);
 		
 		Employee newEmployee3 = new Employee(3,"Dwayne","Marco",1,90000.0);
