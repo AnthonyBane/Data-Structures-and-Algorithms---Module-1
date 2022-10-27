@@ -1,0 +1,1078 @@
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Scanner;
+
+/*
+ * Things to do
+ * ------------
+ * 
+ * Modify the way tax is calculated based on
+ * - https://www.moneysavingexpert.com/banking/tax-rates/#:~:text=EARNINGS%20(IF%20YOU%20LIVE%20IN%20ENGLAND
+ * 
+ * Make outputs of returned data look nice
+ * 
+ * Checks to implement
+ * 
+ */
+
+abstract class Person{
+	private String forname;
+	private String surname;
+	
+	public void setForname(String name) {
+		name = name.trim();
+		if (validateForname(name)) {
+			this.forname = name;
+		} else {
+			throw new IllegalArgumentException("Forname must contain at least 1 non-whitespace character.");
+		}
+	}
+	
+	public String getForname() {
+		return this.forname;
+	}
+	
+	public void setSurname(String name) {
+		name = name.trim();
+		if (validateSurname(name)) {
+			this.surname = name;			
+		} else {
+			this.surname = "";
+		}
+	}
+	
+	public String getSurname() {
+		return this.surname;
+	}
+	
+	public static Boolean validateForname(String name) {
+		return (name.trim().length() >= 1);
+	}
+	
+	public static Boolean validateSurname(String name) {
+		return (name.trim().length() >= 1);
+	}
+}
+
+class Employee extends Person{
+
+	private Integer employeeID;
+	private Integer department;
+	private Double salary;
+	private Double payableTax;
+	private Double postTaxSalary;
+	
+	public void setEmployeeID(Integer employeeID) {
+		this.employeeID = employeeID;
+	}
+
+	public Integer getEmployeeID() {
+		return employeeID;
+	}
+	
+	public void setDepartment(Integer department) {
+		this.department = department;
+	}
+	
+	public Integer getDepartment() {
+		return this.department;
+	}
+	
+	public void setSalary(Double salary) {
+		this.salary = salary;
+	}
+	
+	public Double getSalary() {
+		return this.salary;
+	}
+
+	public void setPayableTax(Double tax) {
+		this.payableTax = tax;
+		setPostTaxSalary(this.salary - this.payableTax);
+	}
+	
+	public Double getPayableTax() {
+		return this.payableTax;
+	}
+	
+	public void setPostTaxSalary(Double salary) {
+		this.postTaxSalary = salary;
+	}
+	
+	public Double getPostTaxSalary() {
+		return this.postTaxSalary;
+	}
+	
+	public static Boolean validateDepartment(Integer department) {
+		if (department > 0) {
+			return true;
+		} else {
+			throw new IllegalArgumentException("Department must be a positive integer.");
+		}
+	}
+	
+	public static Boolean validateSalary(Double salary) {
+		if (salary >= 0) {
+			return true;
+		} else {
+			throw new IllegalArgumentException("Salary must be at least 0.");
+		}
+	}
+	
+	public static Boolean validateTax(Double tax) {
+		if (tax >= 0) {
+			return true;
+		} else {
+			throw new IllegalArgumentException("Tax cannot be negative.");
+		}
+	}
+	
+	public String toString() {
+		return String.format("Employee ID: %d%n"
+							+ "Forname: %s%n"
+							+ "Surname: %s%n"
+							+ "Department ID: %d%n"
+							+ "Gross Salary: \u00a3%.2f%n"
+							+ "Tax: \u00a3%.2f%n"
+							+ "Salary after tax: \u00a3%.2f"
+							,this.getEmployeeID()
+							,this.getForname()
+							,this.getSurname()
+							,this.getDepartment()
+							,this.getSalary()
+							,this.getPayableTax()
+							,this.getPostTaxSalary()
+							);
+	}
+	
+	public Employee(Integer id
+					,String forname
+					,String surname
+					,Integer departmentID
+					,Double salary) {
+		setEmployeeID(id);
+		setForname(forname);
+		setSurname(surname);
+		setDepartment(departmentID);
+		setSalary(salary);
+	}
+}
+
+class Department{
+	private Integer departmentID;
+	private String departmentName;
+	private String departmentAddress;
+	
+	public void setDepartmentID(Integer departmentID) {
+		this.departmentID = departmentID;
+	}
+
+	public Integer getDepartmentID() {
+		return this.departmentID;
+	}
+	
+	public void setDepartmentName(String departmentName) {
+		departmentName = departmentName.trim();
+		if (validateDepartmentName(departmentName)) {
+			this.departmentName = departmentName;
+		} else {
+			throw new IllegalArgumentException("Department name must contain at least 1 non-whitespace character.");
+		}
+	}
+	
+	public String getDepartmentName() {
+		return this.departmentName;
+	}
+	
+	public void setDepartmentAddress(String departmentAddress) {
+		departmentAddress = departmentAddress.trim();
+		if (validateDepartmentAddress(departmentAddress)) {
+			this.departmentAddress = departmentAddress;
+		} else {
+			throw new IllegalArgumentException("Department address must contain at least 1 non-whitespace character.");
+		}		
+		this.departmentAddress = departmentAddress;
+	}
+	
+	public String getDepartmentAddress() {
+		return this.departmentAddress;
+	}
+	
+	public static Boolean validateDepartmentName(String name) {
+		return (name.trim().length() >= 1);
+	}
+	
+	public static Boolean validateDepartmentAddress(String address) {
+		return (address.trim().length() >= 1);
+	}
+	
+	public String toString() {
+		return String.format("Department ID: %d%n"
+							+ "Department: %s%n"
+							+ "Address: %s"
+							,this.getDepartmentID()
+							,this.getDepartmentName()
+							,this.getDepartmentAddress());
+	}
+	
+	public Department(Integer id) {
+		setDepartmentID(id);
+	}
+}
+
+class TaxBand{
+	private String taxBandName;
+	private Double lowerBound;
+	private Double upperBound;
+	private Double taxRate;
+	
+	public String getTaxBandName() {
+		return this.taxBandName;
+	}
+	
+	public void setTaxBandName(String taxBand) {
+		this.taxBandName = taxBand;
+	}
+	
+	public Double getLowerBound() {
+		return this.lowerBound;
+	}
+	
+	public void setLowerBound(Double lowerBound) {
+		this.lowerBound = lowerBound;
+	}
+	
+	public Double getUpperBound() {
+		return this.upperBound;
+	}
+	
+	public void setUpperBound(Double upperBound) {
+		this.upperBound = upperBound;
+	}
+	
+	public Double getTaxRate() {
+		return this.taxRate;
+	}
+	
+	public void setTaxRate(Double taxRate) {
+		this.taxRate = taxRate;
+	}
+
+	public TaxBand(String name, Double lower, Double upper, Double rate) {
+		this.setTaxBandName(name);
+		this.setLowerBound(lower);
+		this.setUpperBound(upper);
+		this.setTaxRate(rate);	
+	}
+}
+
+class TaxFreeLimit{
+	private static TaxFreeLimit maxTaxFree = null;
+	
+	static final Double LOWERBOUND = 100000.0;
+	static final Double UPPERBOUND= 125000.0;
+	
+	private TaxFreeLimit(){
+		// Does nothing
+	}
+	
+	public static TaxFreeLimit getInstance() {
+		if (maxTaxFree == null) {
+			maxTaxFree = new TaxFreeLimit();
+		}
+		return maxTaxFree;
+	}
+	
+}
+
+class Tax{
+	
+	private static Tax tax = null;
+	private static ArrayList<TaxBand> taxBandList = new ArrayList<>();
+	
+	public static Double calculateTax(Double salary) {
+		
+		Double tax = 0.0;
+		Double personalAllowance;
+		
+		if (salary > TaxFreeLimit.UPPERBOUND) {
+			personalAllowance = 0.0;
+		} else if(salary > TaxFreeLimit.LOWERBOUND) {
+			personalAllowance = Math.floor((salary - 100000.0)/2);
+		} else {
+			personalAllowance = taxBandList.get(0).getUpperBound();
+		}
+		
+		Double lowerBound = personalAllowance;
+		Double upperBound;
+
+		for(int i = 1; i <= taxBandList.size(); i++) {
+			upperBound = taxBandList.get(i).getUpperBound() + lowerBound;
+			if ((salary >= lowerBound) && (salary <= upperBound)) {
+				tax = (salary - lowerBound) * taxBandList.get(i).getTaxRate();
+			} else if (salary > upperBound) {
+				tax = (upperBound - lowerBound) * taxBandList.get(i).getTaxRate();
+			}
+			if (salary <= upperBound) {
+				break;
+			}
+			lowerBound = upperBound + 1;
+		}
+		
+//		tax = tax + (taxBandList.get(1).getUpperBound() - personalAllowance);
+//		tax = tax + (taxBandList.get(2).getUpperBound() - (taxBandList.get(1).getUpperBound() - personalAllowance));
+//		
+		return tax;
+		}
+	
+	public static Double calculatePostTaxSalary(Double tax, Double salary) {
+		if (tax > salary) {
+			throw new IllegalArgumentException("Tax cannot exceed salary.");
+		}
+		if ((tax < 0.0) || (salary < 0.0)) {
+			throw new IllegalArgumentException("Tax and salary must be positive.");
+		}
+		
+		return salary - tax;
+	}
+	
+	private static void populateTaxArrayList() {
+		
+		TaxBand personalAllowance = new TaxBand("Personal Allowance", 0.0, 12570.0, 0.0);
+		TaxBand basicRate = new TaxBand("Lower Rate", 12571.0, 50270.0, 0.2);
+		TaxBand higherRate = new TaxBand("Higher Rate", 50271.0, 150000.0, 0.4);
+		TaxBand additionalRate = new TaxBand("Additional Rate", 150001.0, Double.MAX_VALUE, 0.45);
+		taxBandList.add(personalAllowance);
+		taxBandList.add(basicRate);
+		taxBandList.add(higherRate);
+		taxBandList.add(additionalRate);		
+	}
+	
+	private Tax(){
+		// Hard-coded tax code table as not required to be modifiable and simplifies code
+		populateTaxArrayList(); 
+	}
+	
+	public static Tax getInstance() {
+		if(tax == null) {
+			tax = new Tax();
+		}
+		return tax;
+	}
+}
+
+class Sort{
+	
+	// A utility function to swap two elements
+    static void swap(int[] arr, int i, int j)
+    {
+        int temp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = temp;
+    }
+  
+    /* This function takes last element as pivot, places
+       the pivot element at its correct position in sorted
+       array, and places all smaller (smaller than pivot)
+       to left of pivot and all greater elements to right
+       of pivot */
+    static int partition(int[] arr, int low, int high)
+    {
+  
+        // pivot
+        int pivot = arr[high];
+  
+        // Index of smaller element and
+        // indicates the right position
+        // of pivot found so far
+        int i = (low - 1);
+  
+        for (int j = low; j <= high - 1; j++) {
+  
+            // If current element is smaller
+            // than the pivot
+            if (arr[j] < pivot) {
+  
+                // Increment index of
+                // smaller element
+                i++;
+                swap(arr, i, j);
+            }
+        }
+        swap(arr, i + 1, high);
+        return (i + 1);
+    }
+  
+    /* The main function that implements QuickSort
+              arr[] --> Array to be sorted,
+              low --> Starting index,
+              high --> Ending index
+     */
+    static void quickSort(int[] arr, int low, int high)
+    {
+        if (low < high) {
+  
+            // pi is partitioning index, arr[p]
+            // is now at right place
+            int pi = partition(arr, low, high);
+  
+            // Separately sort elements before
+            // partition and after partition
+            quickSort(arr, low, pi - 1);
+            quickSort(arr, pi + 1, high);
+        }
+    }
+	
+	
+	
+	public static ArrayList<Employee> sort(ArrayList<Employee> toSort, Integer type){
+		
+		Integer[] toSortElementLocation = new Integer[toSort.size()];
+		Double[] toSortValue = new Double[toSort.size()];
+
+		// Gather values to sort or raise invalid menu option error
+		if (type == 1) {
+			// Sort by department
+			for (int i = 0; i < toSort.size(); i++) {
+				toSortValue[i] = (double)toSort.get(i).getDepartment();
+			} 
+		} else if (type == 2) {
+			// Sort by salary
+			for (int i = 0; i < toSort.size(); i++) {
+				toSortValue[i] = toSort.get(i).getSalary();
+			} 
+		} else {
+			throw new IllegalArgumentException("Invalid sorting option. 1 - sort by department, 2 - sort by salary.");
+		}
+		
+		// Gather employee ID element locations
+		for (int i = 0; i < toSort.size(); i++) {
+			toSortElementLocation[i] = toSort.get(i).getEmployeeID() - 1;
+		}
+		
+		
+		for (int i = 0; i < toSort.size(); i++) {
+			System.out.println(toSortValue[i]);
+		}
+		
+		
+		
+//		for (int i = 0; i < toSort.size(); i++) {
+//			System.out.println(toSort.get(i).toString());
+//		}
+		
+		
+//		
+//		if (toSort.size() <= 1) {
+//			return toSort; // Already sorted
+//		}
+//		ArrayList<Employee> sorted = new ArrayList<>();
+//		sorted = toSort;
+		
+		
+		
+		return toSort;
+	}
+}
+
+public class PayrollManagement {
+	
+	static ArrayList<Department> departmentList = new ArrayList<>();
+	static ArrayList<Employee> employeeList = new ArrayList<>();
+	static Scanner userInput = new Scanner(System.in);
+	
+	// -----------------
+	// User interactions
+	// -----------------
+	
+	private static String getUserChoice() {
+		
+		System.out.print("Input: ");
+		String input = userInput.nextLine();
+		return input;
+	}
+	
+	private static String getUserChoice(String message) {
+		
+		System.out.println(message);
+		System.out.print("Input: ");
+		String option = userInput.nextLine();
+		return option;
+	}
+	
+	public static int getUserChoice(String[] message, int choices) {
+		// Come back to this code and refactor for new program
+		boolean invalidOption = true;
+		int option = -1; 
+		
+		while (invalidOption) {
+			for(int i = 0; i < message.length; i++) {
+				System.out.println(message[i]);
+			}
+			
+			try {
+				System.out.print("\nOption: ");
+				option = Integer.parseInt(userInput.nextLine());
+				if ((option >= 1) && (option <= choices)) {
+					invalidOption = false;
+				} else {
+					System.out.println("\nPlease enter an integer between 1 and " + choices + "\n");
+				}
+			}
+			catch (NumberFormatException e){
+				System.out.println("\nPlease enter an integer option, e.g.: 1\n");
+			}
+		}
+		
+		return option;
+	}	
+
+	// ---------
+	// Main Menu
+	// ---------
+	
+	private static void mainMenu() {
+		
+		boolean exit = false;
+		while (!exit) {
+			clearScreen();
+			String menuHeader 			= "\nMain Menu Options\n";
+			String departmentOptions 	= "1: Department Options";
+			String employeeOptions		= "2: Employee Options";
+			String exitMain				= "3: Exit program";	
+			
+			String[] stringArray = {menuHeader, departmentOptions, employeeOptions, exitMain};
+			int menuOption = getUserChoice(stringArray, stringArray.length - 1);
+			
+			switch(menuOption) {
+				case 1:
+					departmentOptions();
+					break;
+				case 2:
+					employeeOptions();
+					break;
+				default:
+					exit = true;
+					break;
+			}
+		}
+	}
+	
+	// ------------------------
+	// Department functionality
+	// ------------------------
+	
+	private static void departmentOptions() {
+
+		
+		boolean exit = false;
+		while (!exit) {
+			clearScreen();
+			String menuHeader 		= "\nDepartment Options\n";
+			String addDepartment 	= "1: Add a department";
+			String getDetails 		= "2: Get department details";
+			String returnToMain 	= "3: Return to main menu";
+			
+			String[] stringArray = {menuHeader
+									,addDepartment
+									,getDetails
+									,returnToMain};
+			int menuOption = getUserChoice(stringArray, stringArray.length - 1);
+		
+			switch(menuOption) {
+				case 1:
+					newDepartment();
+					break;
+				case 2:
+					listDepartments();
+					break;
+				default:
+					exit = true;
+					break;
+			}
+		}
+	}
+	
+	private static void listDepartments() {
+
+		clearScreen();
+		
+		if (departmentList.isEmpty()){
+			System.out.println("There are no departments, press enter to return.");
+			userInput.nextLine();
+			return;
+		}
+		
+		ArrayList<String> options = new ArrayList<>();
+		for(Department department: departmentList) {
+			options.add(String.format("%d: %s"
+										,department.getDepartmentID()
+										,department.getDepartmentName()));
+		}
+		String[] stringArray = new String[options.size() + 2];
+		stringArray[0] = "\nSelect a department to retrieve details\n";
+		stringArray[options.size() + 1] = (options.size()+1) + ": Return to department menu";
+		for(int i = 1; i <= options.size(); i++) {
+			stringArray[i] = options.get(i-1);
+		}
+		
+		boolean exit = false;
+		while(!exit) {
+			
+			int menuOption = getUserChoice(stringArray, stringArray.length - 1);
+			
+			if (menuOption == (stringArray.length - 1)) {
+				exit = true;
+			} else {
+				System.out.println(getDepartmentDetails(menuOption));
+			}
+			
+		}
+	}
+	
+	private static String getDepartmentDetails(Integer id) {
+				
+		for(Department department: departmentList) {
+			if(department.getDepartmentID().equals(id)) {
+				System.out.println();
+				return department.toString();
+			}
+		}
+		
+		return "Error in handling departments.";
+	}
+	
+	private static Boolean departmentExists(Integer id) {
+		for(Department department: departmentList) {
+			if(department.getDepartmentID().equals(id)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	private static void newDepartment() {
+		Integer nextID = 0;
+		String departmentName = "";
+		String departmentAddress = "";
+		Boolean valid = false;
+		
+		if (departmentList.isEmpty()) {
+			nextID = 1;
+		} else {
+			nextID = (departmentList.size() + 1);
+		}
+		
+		System.out.println("\nWarning: postal addresses are not validated.\n");
+		System.out.println("Department will be assigned ID: " + nextID + "\n");
+		
+		//Check for duplicate department names
+		while(!valid) {
+			departmentName = getUserChoice("Enter department name.");
+			valid = checkDepartmentExists(departmentName);
+			valid = valid && Department.validateDepartmentName(departmentName);
+			if (!valid) {
+				System.out.println("Department name must be unique.");
+				System.out.println("Department name must be at least 1 non-white character.\n");
+			}
+		}
+		
+		System.out.println("");		
+		
+		valid = false;
+		
+		while(!valid) {
+			departmentAddress = getUserChoice("Enter department address.");
+			valid = Department.validateDepartmentAddress(departmentAddress);
+			if (!valid) {
+				System.out.println("Department address must be at least 1 non-white character.\n");
+			}
+		}
+		
+		addDepartment(nextID,departmentName,departmentAddress);
+	}
+	
+	private static void addDepartment(Integer departmentID
+			,String departmentName
+			,String departmentAddress) {
+
+		Department newDepartment = new Department(departmentID);
+		newDepartment.setDepartmentName(departmentName);
+		newDepartment.setDepartmentAddress(departmentAddress);
+		departmentList.add(newDepartment);
+	}
+	
+	private static Boolean checkDepartmentExists(String name) {
+		Boolean valid = true;
+		for(Department department: departmentList) {
+			if(name.toLowerCase().equals(department.getDepartmentName().toLowerCase())) {
+				System.out.println("\nDepartment name already exists.");
+				valid = false;
+			}
+		}
+		return valid;
+	}
+	
+	// ----------------------
+	// Employee functionality
+	// ----------------------
+	
+	private static void employeeOptions() {
+		
+		clearScreen();
+		
+		boolean exit = false;
+		while (!exit) {
+			String menuHeader 			= "\nEmployee Options\n";
+			String newEmployee 			= "1: Add a new employee";
+			String employeeDetails 		= "2: Get employee details";
+			String highestPaid 			= "3: Get highest paid employee information";
+			String lowestPaid 			= "4: Get lowest paid employee information";
+			String sortByDepartment 	= "5: Sort employees by department";
+			String sortBySalaray 		= "6: Sort employees by salary";
+			String returnToMain 		= "7: Return to main menu";
+			
+			String[] stringArray = {menuHeader
+									,newEmployee
+									,employeeDetails
+									,highestPaid
+									,lowestPaid
+									,sortByDepartment
+									,sortBySalaray
+									,returnToMain};
+			int menuOption = getUserChoice(stringArray, stringArray.length - 1);
+			
+			switch(menuOption) {
+				case 1:
+					if(departmentList.isEmpty()) {
+						System.out.println("\nThere are no departments, employee cannot be created.");
+						break;
+					}
+					newEmployee();
+					break;
+				case 2:
+					if (emptyEmployeeList()) {
+						break;
+					}
+					listEmployees();
+					break;
+				case 3:
+					if (emptyEmployeeList()) {
+						break;
+					}
+					System.out.println("\nThe highest paid employee's details are:\n");
+					System.out.println(getHighestPaidEmployee().toString());
+					break;
+				case 4:
+					if (emptyEmployeeList()) {
+						break;
+					}					
+					System.out.println("\nThe lowest paid employee's details are:\n");
+					System.out.println(getLowestPaidEmployee().toString());
+					break;
+				case 5:
+					if (emptyEmployeeList()) {
+						break;
+					}
+					Sort.sort(employeeList,1);
+					break;
+				case 6:
+					if (emptyEmployeeList()) {
+						break;
+					}
+					Sort.sort(employeeList,2);
+					break;
+				default:
+					exit = true;
+			}
+		}
+	}
+	
+	private static void newEmployee() {
+		// Get user input 
+		Boolean valid = false;
+		Integer nextID;
+		String newForname = "";
+		String newSurname = "";
+		Integer newDepartmentID = 0;
+		Double newGrossSalary = 0.0;
+		
+		if (employeeList.isEmpty()) {
+			nextID = 1;
+		} else {
+			nextID = (employeeList.size() + 1);
+		}
+		
+		System.out.println("\nEmployee will be assigned ID: " + nextID + "\n");
+		
+		while(!valid) {
+			newForname = getUserChoice("Enter employee forname.");
+			valid = Person.validateForname(newForname);
+			if (!valid) {
+				System.out.println("Employee forname must must be at least 1 non-white character.\n");
+			}
+		}
+		
+		System.out.println("");		
+		
+		newSurname = getUserChoice("Enter employee surname (may be empty).");
+		
+		System.out.println("");		
+		
+		valid = false;
+		
+		while(!valid) {
+			
+			// list all departments to choose from with extra option to create department
+			for(Department department: departmentList) {
+				System.out.println(String.format("%d: %s"
+											,department.getDepartmentID()
+											,department.getDepartmentName()));
+			}
+			
+			try {
+				newDepartmentID = Integer.parseInt(getUserChoice("\nEnter department id."));
+				valid = departmentExists(newDepartmentID);
+			}
+			catch (NumberFormatException e) {
+				System.out.print("Department ID must be an integer, e.g.: 1");
+			}
+						
+			if (!valid) {
+				String menuHeader = "Department does not exist, do you wish to create one?";
+				String no = "1: No - will result in returning to the main menu.";
+				String yes = "2: Yes";
+				String[] stringArray = {menuHeader, no, yes}; 
+				Integer response = getUserChoice(stringArray, stringArray.length - 1);
+				if (response == 2){
+						newDepartment();
+				} else {
+					return;
+				}
+			}
+		}
+		
+		System.out.println("");		
+		
+		valid = false;
+		
+		while(!valid) {
+			try {
+				newGrossSalary = Double.parseDouble(getUserChoice("Enter employee salary."));				
+				valid = Employee.validateSalary(newGrossSalary);
+			}
+			catch (NumberFormatException e) {
+				System.out.print("Salary must be of double type, e.g.: 59000.0");
+			}
+			if (!valid) {
+				System.out.println("Salary must 0 or more.\n");
+			}
+		}
+		
+		addEmployee(nextID
+					,newForname
+					,newSurname
+					,newDepartmentID
+					,newGrossSalary);		
+	}
+	
+	
+	private static void addEmployee(Integer employeeID
+									,String forname
+									,String surname
+									,Integer departmentID
+									,Double grossSalary) {
+		
+		Employee newEmployee = new Employee(employeeID
+											,forname
+											,surname
+											,departmentID
+											,grossSalary);
+		Double tax = Tax.calculateTax(grossSalary);
+
+		newEmployee.setPayableTax(tax);
+		newEmployee.setPostTaxSalary(Tax.calculatePostTaxSalary(tax, grossSalary));
+		employeeList.add(newEmployee);
+		System.out.println("\nEmployee successfully added.");
+	}
+	
+	// TODO - add method to list all employees, same as department list
+	private static void listEmployees() {
+		
+		clearScreen();
+		
+		if (employeeList.isEmpty()){
+			System.out.println("There are no employees, press enter to return.");
+			userInput.nextLine();
+			return;
+		}
+		
+		ArrayList<String> options = new ArrayList<>();
+		for(Employee employee: employeeList) {
+			options.add(String.format("%d: %s %s"
+										,employee.getEmployeeID()
+										,employee.getForname()
+										,employee.getSurname()));
+		}
+		String[] stringArray = new String[options.size() + 2];
+		stringArray[0] = "\nSelect an employee to retrieve details\n";
+		stringArray[options.size() + 1] = (options.size()+1) + ": Return to employee menu";
+		for(int i = 1; i <= options.size(); i++) {
+			stringArray[i] = options.get(i-1);
+		}
+		
+		boolean exit = false;
+		while(!exit) {
+			
+			int menuOption = getUserChoice(stringArray, stringArray.length - 1);
+			
+			if (menuOption == (stringArray.length - 1)) {
+				exit = true;
+			} else {
+				System.out.println(getEmployeeDetails(menuOption));
+			}
+			
+		}
+		
+	}
+	
+	private static Boolean emptyEmployeeList() {
+		if (employeeList.isEmpty()) {
+			System.out.println("\nThere are no employees in the database.");
+			return true;
+		}
+		return false;
+	}
+	
+	private static String getEmployeeDetails(Integer id) {
+				
+		for(Employee employee: employeeList) {
+			if(employee.getEmployeeID().equals(id)) {
+				System.out.println();
+				return employee.toString();
+			}
+		}
+		
+		return "Error in handling employees.";
+	}
+	
+	private static Employee getHighestPaidEmployee() {
+				
+		Employee highest = employeeList.get(0);
+		for (int i = 1; i < employeeList.size(); i++) {
+			if (highest.getSalary() < employeeList.get(i).getSalary()) {
+				highest = employeeList.get(i);
+			}
+		}
+		return highest;
+		
+	}
+	
+	private static Employee getLowestPaidEmployee() {
+		
+		Employee lowest = employeeList.get(0);
+		for (int i = 1; i < employeeList.size(); i++) {
+			if (lowest.getSalary() > employeeList.get(i).getSalary()) {
+				lowest = employeeList.get(i);
+			}
+		}
+		return lowest;
+	}	
+	
+	// ------------------------
+	// Welcome and exit screens
+	// ------------------------
+	
+	private static void welcomeMessage() {
+		clearScreen();
+		System.out.println("Welcome to the Payroll Management example program\n");
+		System.out.println("To use this program, navigate the menus through integers "
+				+ "representing the menu option.");
+		System.out.println("Such as 3, for \"3: Exit Program\"\n");
+		System.out.println("Press enter to engage with the program.");
+		userInput.nextLine();
+	}
+	
+	
+	private static void exit() {
+		clearScreen();
+		userInput.close();
+		System.out.println("\nThe program has been successfully closed.");
+		System.out.println("No data has been retained.");
+	}
+	
+	
+	// This only works on Windows in the command prompt, other implementations not required
+	private static void clearScreen(){
+		if (System.getProperty("os.name").contains("Windows")){		
+			try{
+				new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();  
+			}
+			catch (InterruptedException | IOException e) {
+				System.out.print(e);
+			}
+		}
+	}
+	
+	
+	private static void test() {
+		Double tax;
+
+		Department newDepartment = new Department(1);
+		newDepartment.setDepartmentName("Halo");
+		newDepartment.setDepartmentAddress("Tit avenue");
+		departmentList.add(newDepartment);
+		
+		Department newDepartment2 = new Department(2);
+		newDepartment2.setDepartmentName("HR");
+		newDepartment2.setDepartmentAddress("Everyone Hates Us");
+		departmentList.add(newDepartment2);
+		
+		Department newDepartment3 = new Department(3);
+		newDepartment3.setDepartmentName("Fired");
+		newDepartment3.setDepartmentAddress("I should be");
+		departmentList.add(newDepartment3);
+		
+		Employee newEmployee = new Employee(1,"Anthony","Bane",1,50000.0);
+		tax = Tax.calculateTax(50000.0);
+		newEmployee.setPayableTax(tax);
+		newEmployee.setPostTaxSalary(Tax.calculatePostTaxSalary(tax, 50000.0));
+		employeeList.add(newEmployee);
+		
+		Employee newEmployee2 = new Employee(2,"Bob","Fisher",2,190000.0);
+		tax = Tax.calculateTax(190000.0);
+		newEmployee2.setPayableTax(tax);
+		newEmployee2.setPostTaxSalary(Tax.calculatePostTaxSalary(tax, 190000.0));
+		employeeList.add(newEmployee2);
+		
+		Employee newEmployee3 = new Employee(3,"Dwayne","Marco",1,90000.0);
+		tax = Tax.calculateTax(90000.0);
+		newEmployee3.setPayableTax(tax);
+		newEmployee3.setPostTaxSalary(Tax.calculatePostTaxSalary(tax, 90000.0));
+		employeeList.add(newEmployee3);
+		
+		Employee newEmployee4 = new Employee(4,"Fish","Salad",2,30000.0);
+		tax = Tax.calculateTax(30000.0);
+		newEmployee4.setPayableTax(tax);
+		newEmployee4.setPostTaxSalary(Tax.calculatePostTaxSalary(tax, 30000.0));
+		employeeList.add(newEmployee4);
+		
+		Employee newEmployee5 = new Employee(5,"Simon","The Twat",3,1000.0);
+		tax = Tax.calculateTax(1000.0);
+		newEmployee5.setPayableTax(tax);
+		newEmployee5.setPostTaxSalary(Tax.calculatePostTaxSalary(tax, 1000.0));
+		employeeList.add(newEmployee5);
+	}
+	
+	public static void main(String[] args){
+		
+		Tax.getInstance();
+		test();
+		
+		welcomeMessage();
+		mainMenu();
+		exit();
+	}
+
+}
+
