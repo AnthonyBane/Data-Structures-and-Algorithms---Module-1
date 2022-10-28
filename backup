@@ -2,20 +2,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-/*
- * Things to do
- * ------------
- * 
- * Modify the way tax is calculated based on
- * - https://www.moneysavingexpert.com/banking/tax-rates/#:~:text=EARNINGS%20(IF%20YOU%20LIVE%20IN%20ENGLAND
- * 
- * Make outputs of returned data look nice
- * 
- * Checks to implement
- * 
- */
-
 abstract class Person{
+	// Abstract class Person to allow for additional sub-classes later
+	
 	private String forname;
 	private String surname;
 	
@@ -55,7 +44,9 @@ abstract class Person{
 }
 
 class Employee extends Person{
-
+	// Employee extends abstract Person class inheriting forname and surname + validators
+	// Employee holds additional attributes and functionality for a salaried worker
+	
 	private Integer employeeID;
 	private Integer department;
 	private Double salary;
@@ -159,6 +150,8 @@ class Employee extends Person{
 }
 
 class Department{
+	// Department objects with getters, setters, and validation functions
+	
 	private Integer departmentID;
 	private String departmentName;
 	private String departmentAddress;
@@ -221,6 +214,8 @@ class Department{
 }
 
 class TaxBand{
+	// TaxBand object to hold upper and lower bounds as well as tax rate
+	
 	private String taxBandName;
 	private Double lowerBound;
 	private Double upperBound;
@@ -264,13 +259,15 @@ class TaxBand{
 }
 
 class TaxFreeLimit{
+	// Singleton to abstract tax free limits
+	
 	private static TaxFreeLimit maxTaxFree = null;
 	
 	static final Double LOWERBOUND = 100000.0;
-	static final Double UPPERBOUND= 125000.0;
+	static final Double UPPERBOUND = 125000.0;
 	
 	private TaxFreeLimit(){
-		// Does nothing
+		// Does nothing in line with singleton conventions.
 	}
 	
 	public static TaxFreeLimit getInstance() {
@@ -283,12 +280,14 @@ class TaxFreeLimit{
 }
 
 class PersonalAllowance{
+	// Singleton to abstract personal allowance
+	
 	private static PersonalAllowance personalAllowance = null;
 	
 	static final Double ALLOWANCE = 12570.0;
 	
 	private PersonalAllowance(){
-		// Does nothing
+		// Does nothing in line with singleton conventions.
 	}
 	
 	public static PersonalAllowance getInstance() {
@@ -302,10 +301,14 @@ class PersonalAllowance{
 
 class Tax{
 	
+	// Holds the singleton of Tax in tax
 	private static Tax tax = null;
+	
+	// Holds a list of TaxBand objects
 	private static ArrayList<TaxBand> taxBandList = new ArrayList<>();
 	
 	public static Double calculateTax(Double salary) {
+		// Calculates tax identifying if the salary is within the taxband's bounds
 		
 		setBands(salary);
 		Double tax = 0.0;		
@@ -325,6 +328,8 @@ class Tax{
 	}
 	
 	public static Double calculatePostTaxSalary(Double tax, Double salary) {
+		// Determines post tax salary
+		
 		if (tax > salary) {
 			throw new IllegalArgumentException("Tax cannot exceed salary.");
 		}
@@ -336,6 +341,7 @@ class Tax{
 	}
 	
 	private static Double calculatePersonalAllowance(Double salary) {
+		// Determines personal allowance
 		
 		if (salary > TaxFreeLimit.UPPERBOUND) {
 			return 0.0;
@@ -347,10 +353,12 @@ class Tax{
 	}
 	
 	private static void setBands(Double salary) {
-		// These boundaries are defined by - https://www.gov.uk/income-tax-rates
-		// with the personal allowance deviations factored in.
-		// These calculations are based on this table - https://www.moneysavingexpert.com/banking/tax-rates/#:~:text=46%25%20additional%20rate.-,I%20live%20in%20England
-		// Only assuming for England
+		/*
+		 * These boundaries are defined by - https://www.gov.uk/income-tax-rates
+		 * with the personal allowance deviations factored in.
+		 * These calculations are based on this table - https://www.moneysavingexpert.com/banking/tax-rates/#:~:text=46%25%20additional%20rate.-,I%20live%20in%20England
+		 * Only assuming for England
+		 */
 		
 		Double personalAllowance = calculatePersonalAllowance(salary);
 		setBand(0, 0.0, personalAllowance, 0.0);
@@ -360,12 +368,15 @@ class Tax{
 	}
 	
 	private static void setBand(Integer element, Double lowerBound, Double upperBound, Double taxRate) {
+		// Set band attributes
+		
 		taxBandList.get(element).setLowerBound(lowerBound);
 		taxBandList.get(element).setUpperBound(upperBound);
 		taxBandList.get(element).setTaxRate(taxRate);
 	}
 	
 	private static void populateTaxArrayList() {
+		// Populating tax bands
 		
 		TaxBand personalAllowance = new TaxBand("Personal Allowance");
 		TaxBand basicRate = new TaxBand("Lower Rate");
@@ -378,11 +389,15 @@ class Tax{
 	}
 	
 	private Tax(){
+		// Private constructor allow for singleton functionality
+		
 		// Hard-coded tax code table as not required to be modifiable and simplifies code
 		populateTaxArrayList(); 
 	}
 	
 	public static Tax getInstance() {
+		// Creates or returns a singleton of Tax
+		
 		if(tax == null) {
 			tax = new Tax();
 		}
@@ -391,13 +406,13 @@ class Tax{
 }
 
 class Sort{
+	// Sort function to abstract sorting functionality from the PayrollManagement class
 	
 	private static Integer[] toSortElementLocation;
 	private static Double[] toSortValue;
 	
-	// A utility function to swap two elements in element array and value array
-	private static void swap(Integer i, Integer j)
-    {
+	private static void swap(Integer i, Integer j) {
+		// A utility function to swap two elements in element array and value array
     	Integer tempInteger = toSortElementLocation[i];
         toSortElementLocation[i] = toSortElementLocation[j];
         toSortElementLocation[j] = tempInteger;
@@ -406,15 +421,15 @@ class Sort{
         toSortValue[j] = tempDouble;
     }
   
-    // QuickSort Partition function
-    private static int partition(Integer low, Integer high)
-    {
+    private static int partition(Integer low, Integer high) {
+    	// QuickSort Partition function
+    	
         Double pivot = toSortValue[high];
         Integer i = (low - 1);
   
         for (Integer j = low; j < high; j++) {
         	
-            if (toSortValue[j] < pivot) {
+            if (toSortValue[j] <= pivot) {
                 i++;
                 swap(i, j);
             }
@@ -423,10 +438,11 @@ class Sort{
         return (i + 1);
     }
   
-    // Begins the QuickSort algorithm
-    // QuickSort algorithm based on Introduction to Algorithms by Cormen et al, 2009
-    private static void quickSort(Integer low, Integer high)
-    {
+
+    private static void quickSort(Integer low, Integer high){
+        // Begins the QuickSort algorithm
+        // QuickSort algorithm based on Introduction to Algorithms by Cormen et al, 2009
+    	
         if (low < high) {
             Integer partitionIndex = partition(low, high);
             quickSort(low, partitionIndex - 1);
@@ -435,7 +451,17 @@ class Sort{
     }
 	
 	private static void quickSortSetup(ArrayList<Employee> toSort, Integer type){
-		// Returns a sorted array of element IDs which correspond to the element position of Employees list
+		/*
+		 * Returns a sorted array of element IDs which correspond to the element 
+		 * position of Employees list. Using two integer arrays allows for the values
+		 * to depend on which attribute we with to sort by and the array of elements
+		 * allows for fast lookup of the elements when returned.
+		 * 
+		 * No sorting of the underlying data structure if therefore needed or required.
+		 * This is not a perfect solution but shows an implemented sorting algorithm.
+		 * This could also be done by making Employee a comparator class and using
+		 * the built-in Collections.sort() which implements a merge-sort algorithm. 
+		 */
 		
 		toSortElementLocation = new Integer[toSort.size()];
 		toSortValue = new Double[toSort.size()];
@@ -463,11 +489,16 @@ class Sort{
 	}
 	
 	public static Integer[] getSortedArray() {
-		// Add not instantiated exception or similar
+		// Returns sorted array of integers referencing ArrayList indices 
 		return toSortElementLocation;
 	}
 	
+	private Sort() {
+		// Does nothing, private constructor is convention.
+	}
+	
 	public static void sort(ArrayList<Employee> toSort, Integer type) {
+		// Initiates QuickSort processes
 		
 		quickSortSetup(toSort, type);
 		quickSort(0, toSortElementLocation.length - 1);
@@ -477,8 +508,11 @@ class Sort{
 
 public class PayrollManagement {
 	
+	// Temporary storage for employee and department objects
 	static ArrayList<Department> departmentList = new ArrayList<>();
 	static ArrayList<Employee> employeeList = new ArrayList<>();
+	
+	// User input scanner object used globally
 	static Scanner userInput = new Scanner(System.in);
 	
 	// -----------------
@@ -486,21 +520,23 @@ public class PayrollManagement {
 	// -----------------
 	
 	private static String getUserChoice(String message) {
+		// Overloaded method to display a single message and retrieve a string
 		
 		System.out.println(message);
 		System.out.print("Input: ");
-		String option = userInput.nextLine();
-		return option;
+		return userInput.nextLine();
 	}
 	
-	private static int getUserChoice(String[] message, int choices) {
-		// Come back to this code and refactor for new program
+	private static int getUserChoice(String[] messageArray, int choices) {
+		// Overloaded method for multiple options
+		// Displays an array of messages offering choices to the user
+		
 		boolean invalidOption = true;
 		int option = -1; 
 		
 		while (invalidOption) {
-			for(int i = 0; i < message.length; i++) {
-				System.out.println(message[i]);
+			for(int i = 0; i < messageArray.length; i++) {
+				System.out.println(messageArray[i]);
 			}
 			
 			try {
@@ -509,6 +545,7 @@ public class PayrollManagement {
 				if ((option >= 1) && (option <= choices)) {
 					invalidOption = false;
 				} else {
+					clearScreen();
 					System.out.println("\nPlease enter an integer between 1 and " + choices);
 				}
 			}
@@ -526,6 +563,7 @@ public class PayrollManagement {
 	// ---------
 	
 	private static void mainMenu() {
+		// Displays the main menu options
 		
 		boolean exit = false;
 		while (!exit) {
@@ -552,12 +590,13 @@ public class PayrollManagement {
 		}
 	}
 	
+	
 	// ------------------------
 	// Department functionality
 	// ------------------------
 	
 	private static void departmentOptions() {
-
+		// Displays department options
 		
 		boolean exit = false;
 		while (!exit) {
@@ -587,8 +626,10 @@ public class PayrollManagement {
 		}
 	}
 	
+	
 	private static void listDepartments() {
-
+		// Displays all departments to select from
+		
 		clearScreen();
 		
 		if (departmentList.isEmpty()){
@@ -622,11 +663,11 @@ public class PayrollManagement {
 				System.out.println("Department details for ID: " + menuOption);
 				displayDepartments(getDepartmentDetails(menuOption));
 			}
-			
 		}
 	}
 	
 	private static Integer[] getDepartmentDetails(Integer id) {
+		// Get department element based on ID
 		
 		Integer[] departmentElement = {1}; 
 		
@@ -639,15 +680,22 @@ public class PayrollManagement {
 		return departmentElement;	
 	}
 	
-private static void displayDepartments(Integer[] elementList) {
+	private static void displayDepartments(Integer[] elementList) {
+		/*
+		 *  Displays departments in a formatted table
+		 *  Based on elements for fast lookup
+		 */
 		
+		// Table width
 		Integer tableRuleLength = 89;
 		String tableRule = dynamicStringBuilder(tableRuleLength, '=');
+		
 		//Output Table Headers
 		String depID = "Department ID";
 		String depName = "Department Name";
 		String depAddress = "Department Address";
 		
+		// Display table headers
 		System.out.println("\n" + tableRule);
 		System.out.format("|%15s|%20s|%50s|\n"
 						,centerString(15,depID)
@@ -655,21 +703,29 @@ private static void displayDepartments(Integer[] elementList) {
 						,centerString(50,depAddress));
 		tableRule = dynamicStringBuilder(tableRuleLength, '-');
 		System.out.print("" + tableRule);
+		
+		String departmentID;
+		String name;
+		String address;
+		
+		// Display every employee with element in element list
 		for (int i = 0; i < elementList.length; i++) {
 		
-			String departmentID = String.valueOf(departmentList.get(elementList[i]).getDepartmentID());
-			String name = stringSizeLimit(departmentList.get(elementList[i]).getDepartmentName(),19);
-			String address = stringSizeLimit(departmentList.get(elementList[i]).getDepartmentAddress(),49);
+			departmentID = String.valueOf(departmentList.get(elementList[i]).getDepartmentID());
+			name = stringSizeLimit(departmentList.get(elementList[i]).getDepartmentName(),19);
+			address = stringSizeLimit(departmentList.get(elementList[i]).getDepartmentAddress(),49);
 			
 			System.out.format("\n|%15s|%20s|%50s|"
 							,centerString(15,departmentID)
 							,stringSizeLimit(name,20)
 							,stringSizeLimit(address,50));		}
-	tableRule = dynamicStringBuilder(tableRuleLength, '=');
-	System.out.println("\n" + tableRule);
+		tableRule = dynamicStringBuilder(tableRuleLength, '=');
+		System.out.println("\n" + tableRule);
 	}
 	
 	private static Boolean departmentExists(Integer id) {
+		// Checks department exists by ID
+		
 		for(Department department: departmentList) {
 			if(department.getDepartmentID().equals(id)) {
 				return true;
@@ -679,6 +735,8 @@ private static void displayDepartments(Integer[] elementList) {
 	}
 	
 	private static void newDepartment() {
+		// Gets user inputs for a new department
+		
 		Integer nextID = 0;
 		String departmentName = "";
 		String departmentAddress = "";
@@ -722,7 +780,8 @@ private static void displayDepartments(Integer[] elementList) {
 	private static void addDepartment(Integer departmentID
 			,String departmentName
 			,String departmentAddress) {
-
+		// Added a department
+		
 		Department newDepartment = new Department(departmentID);
 		newDepartment.setDepartmentName(departmentName);
 		newDepartment.setDepartmentAddress(departmentAddress);
@@ -730,6 +789,8 @@ private static void displayDepartments(Integer[] elementList) {
 	}
 	
 	private static Boolean checkDepartmentExists(String name) {
+		// Check if department name already exists
+		
 		Boolean valid = true;
 		for(Department department: departmentList) {
 			if(name.toLowerCase().equals(department.getDepartmentName().toLowerCase())) {
@@ -740,11 +801,13 @@ private static void displayDepartments(Integer[] elementList) {
 		return valid;
 	}
 	
+	
 	// ----------------------
 	// Employee functionality
 	// ----------------------
 	
 	private static void employeeOptions() {
+		// Display employee options
 		
 		clearScreen();
 		
@@ -826,15 +889,19 @@ private static void displayDepartments(Integer[] elementList) {
 	// Code from solution https://stackoverflow.com/questions/8154366/how-to-center-a-string-using-string-format
 	// that implemented solution found at https://www.leveluplunch.com/java/examples/center-justify-string/
 	private static String centerString (int width, String s) {
+		// Works like centre-align. Used American spelling as source
 	    return String.format("%-" + width  + "s", String.format("%" + (s.length() + (width - s.length()) / 2) + "s", s));
 	}
 	
 	// Inspired by https://stackoverflow.com/questions/2804827/create-a-string-with-n-characters
 	private static String dynamicStringBuilder(Integer length, Character c) {
+		// Create a string of length filled with characters c. Used for table rules
 		return new String(new char[length]).replace('\0', c);
 	}
 	
 	private static String stringSizeLimit(String string, Integer limit) {
+		// Truncates Strings that exceed table width boundaries
+		
 		StringBuilder returnString = new StringBuilder(string);
 		if(returnString.length() > limit) {
 			returnString.setLength(limit - 2);
@@ -845,10 +912,16 @@ private static void displayDepartments(Integer[] elementList) {
 	}
 	
 	private static void displayEmployees(Integer[] elementList) {
+		/*
+		 *  Displays employees in a formatted table
+		 *  Based on elements for fast lookup
+		 */
 		
+		// Table width
 		Integer tableRuleLength = 100;
 		String tableRule = dynamicStringBuilder(tableRuleLength, '=');
-		//Output Table Headers
+		
+		//Output table headers
 		String empID = "Employee ID";
 		String firstName = "First Name";
 		String lastName = "Last Name";
@@ -857,6 +930,7 @@ private static void displayDepartments(Integer[] elementList) {
 		String tax = "Tax";
 		String postTaxSal = "Salary After Tax";
 		
+		// Display table headers
 		System.out.println("\n" + tableRule);
 		System.out.format("|%13s|%12s|%11s|%15s|%12s|%11s|%18s|\n"
 						,centerString(13,empID)
@@ -868,16 +942,25 @@ private static void displayDepartments(Integer[] elementList) {
 						,centerString(18,postTaxSal));
 		tableRule = dynamicStringBuilder(tableRuleLength, '-');
 		System.out.print("" + tableRule);
+		
+		String employeeID;
+		String forname;
+		String surname;
+		String departmentID;
+		Double salary;
+		Double payableTax;
+		Double postTaxSalary;
+		
+		// Display every employee with element in element list
 		for (int i = 0; i < elementList.length; i++) {
 		
-			String employeeID = String.valueOf(employeeList.get(elementList[i]).getEmployeeID());
-			String forname = stringSizeLimit(employeeList.get(elementList[i]).getForname(),12);
-			String surname = stringSizeLimit(employeeList.get(elementList[i]).getSurname(),11);
-			String departmentID = String.valueOf(employeeList.get(elementList[i]).getDepartment());
-			Double salary = employeeList.get(elementList[i]).getSalary();
-			Double payableTax = employeeList.get(elementList[i]).getPayableTax();
-			Double postTaxSalary = employeeList.get(elementList[i]).getPostTaxSalary();
-			
+			employeeID = String.valueOf(employeeList.get(elementList[i]).getEmployeeID());
+			forname = stringSizeLimit(employeeList.get(elementList[i]).getForname(),12);
+			surname = stringSizeLimit(employeeList.get(elementList[i]).getSurname(),11);
+			departmentID = String.valueOf(employeeList.get(elementList[i]).getDepartment());
+			salary = employeeList.get(elementList[i]).getSalary();
+			payableTax = employeeList.get(elementList[i]).getPayableTax();
+			postTaxSalary = employeeList.get(elementList[i]).getPostTaxSalary();
 			
 			System.out.format("\n|%13s|%12s|%11s|%15s|\u00a3%11.2f|\u00a3%10.2f|\u00a3%17.2f|"
 							,centerString(13,employeeID)
@@ -888,14 +971,15 @@ private static void displayDepartments(Integer[] elementList) {
 							,payableTax
 							,postTaxSalary);
 		}
-	tableRule = dynamicStringBuilder(tableRuleLength, '=');
-	System.out.println("\n" + tableRule);
+		tableRule = dynamicStringBuilder(tableRuleLength, '=');
+		System.out.println("\n" + tableRule);
 	}
 	
 	private static void newEmployee() {
-		// Get user input 
+		// Get user inputs for a new employee
+		
 		Boolean valid = false;
-		Integer nextID;
+		Integer nextID = 0;
 		String newForname = "";
 		String newSurname = "";
 		Integer newDepartmentID = 0;
@@ -986,6 +1070,7 @@ private static void displayDepartments(Integer[] elementList) {
 									,String surname
 									,Integer departmentID
 									,Double grossSalary) {
+		// Initiate a new employee object and add to employee ArrayList
 		
 		Employee newEmployee = new Employee(employeeID
 											,forname
@@ -1000,8 +1085,8 @@ private static void displayDepartments(Integer[] elementList) {
 		System.out.println("\nEmployee successfully added.");
 	}
 	
-	// TODO - add method to list all employees, same as department list
 	private static void listEmployees() {
+		// Lists all employees to select details from
 		
 		clearScreen();
 		
@@ -1041,6 +1126,8 @@ private static void displayDepartments(Integer[] elementList) {
 	}
 	
 	private static Boolean emptyEmployeeList() {
+		// Checks for no employees stored
+		
 		if (employeeList.isEmpty()) {
 			System.out.println("\nThere are no employees in the database.");
 			return true;
@@ -1049,7 +1136,8 @@ private static void displayDepartments(Integer[] elementList) {
 	}
 	
 	private static Integer[] getEmployeeDetails(Integer id) {
-				
+		// Returns element of employee in ArrayList
+		
 		Integer[] employeeElement = {1}; 
 		
 		for (int i = 0; i < employeeList.size(); i++) {
@@ -1062,7 +1150,8 @@ private static void displayDepartments(Integer[] elementList) {
 	}
 	
 	private static Integer[] getHighestPaidEmployee() {
-				
+		// Iterative search to find to highest paid employee's index	
+		
 		Integer[] highest = {0};
 		for (int i = 1; i < employeeList.size(); i++) {
 			if (employeeList.get(highest[0]).getSalary() < employeeList.get(i).getSalary()) {
@@ -1073,6 +1162,7 @@ private static void displayDepartments(Integer[] elementList) {
 	}
 	
 	private static Integer[] getLowestPaidEmployee() {
+		// Iterative search to find to lowest paid employee's index
 		
 		Integer[] lowest = {0};
 		for (int i = 1; i < employeeList.size(); i++) {
@@ -1097,7 +1187,6 @@ private static void displayDepartments(Integer[] elementList) {
 		userInput.nextLine();
 	}
 	
-	
 	private static void exit() {
 		clearScreen();
 		userInput.close();
@@ -1105,8 +1194,7 @@ private static void displayDepartments(Integer[] elementList) {
 		System.out.println("No data has been retained.");
 	}
 	
-	
-	// This only works on Windows in the command prompt, other implementations not required
+	// This only works on Windows in the command prompt
 	private static void clearScreen(){
 		if (System.getProperty("os.name").contains("Windows")){		
 			try{
@@ -1118,65 +1206,73 @@ private static void displayDepartments(Integer[] elementList) {
 		}
 	}
 	
-	
 	private static void test() {
+		/*
+		 * Hard-coding in test data from the assignment brief for faster testing
+		 * and experimentation
+		 */
+		
 		Double tax;
 
 		Department newDepartment = new Department(1);
-		newDepartment.setDepartmentName("Halo");
-		newDepartment.setDepartmentAddress("Best game series");
+		newDepartment.setDepartmentName("Human Resources");
+		newDepartment.setDepartmentAddress("1 Willcott Crescent, Mount Albert");
 		departmentList.add(newDepartment);
 		
 		Department newDepartment2 = new Department(2);
-		newDepartment2.setDepartmentName("HR");
-		newDepartment2.setDepartmentAddress("Everyone Hates Us");
+		newDepartment2.setDepartmentName("Marketing");
+		newDepartment2.setDepartmentAddress("45 Pitt Street, Mount Wellington");
 		departmentList.add(newDepartment2);
 		
 		Department newDepartment3 = new Department(3);
-		newDepartment3.setDepartmentName("Fired");
-		newDepartment3.setDepartmentAddress("Simon should be");
+		newDepartment3.setDepartmentName("Production");
+		newDepartment3.setDepartmentAddress("30 Willcott Crescent, Mount Albert");
 		departmentList.add(newDepartment3);
 		
-		Employee newEmployee = new Employee(1,"Anthony","Bane",1,50000.0);
+		Employee newEmployee = new Employee(1,"Mike","Watts",1,50000.0);
 		tax = Tax.calculateTax(50000.0);
 		newEmployee.setPayableTax(tax);
 		newEmployee.setPostTaxSalary(Tax.calculatePostTaxSalary(tax, 50000.0));
 		employeeList.add(newEmployee);
 		
-		Employee newEmployee2 = new Employee(2,"Bob","Fisher",2,165000.0);
-		tax = Tax.calculateTax(165000.0);
+		Employee newEmployee2 = new Employee(2,"Rakesh","Kumar",2,40000.0);
+		tax = Tax.calculateTax(40000.0);
 		newEmployee2.setPayableTax(tax);
-		newEmployee2.setPostTaxSalary(Tax.calculatePostTaxSalary(tax, 165000.0));
+		newEmployee2.setPostTaxSalary(Tax.calculatePostTaxSalary(tax, 40000.0));
 		employeeList.add(newEmployee2);
 		
-		Employee newEmployee3 = new Employee(3,"Dwayne","Marco",1,90000.0);
-		tax = Tax.calculateTax(90000.0);
+		Employee newEmployee3 = new Employee(3,"Havea","Fonua",1,80000.0);
+		tax = Tax.calculateTax(80000.0);
 		newEmployee3.setPayableTax(tax);
-		newEmployee3.setPostTaxSalary(Tax.calculatePostTaxSalary(tax, 90000.0));
+		newEmployee3.setPostTaxSalary(Tax.calculatePostTaxSalary(tax, 80000.0));
 		employeeList.add(newEmployee3);
 		
-		Employee newEmployee4 = new Employee(4,"Fish","Salad",2,30000.0);
-		tax = Tax.calculateTax(30000.0);
+		Employee newEmployee4 = new Employee(4,"Jack","Moral",2,165000.0);
+		tax = Tax.calculateTax(165000.0);
 		newEmployee4.setPayableTax(tax);
-		newEmployee4.setPostTaxSalary(Tax.calculatePostTaxSalary(tax, 30000.0));
+		newEmployee4.setPostTaxSalary(Tax.calculatePostTaxSalary(tax, 165000.0));
 		employeeList.add(newEmployee4);
 		
-		Employee newEmployee5 = new Employee(5,"Simon","The Twat",3,1000.0);
-		tax = Tax.calculateTax(1000.0);
+		Employee newEmployee5 = new Employee(5,"Sarah","Karim",3,12000.0);
+		tax = Tax.calculateTax(12000.0);
 		newEmployee5.setPayableTax(tax);
-		newEmployee5.setPostTaxSalary(Tax.calculatePostTaxSalary(tax, 1000.0));
+		newEmployee5.setPostTaxSalary(Tax.calculatePostTaxSalary(tax, 12000.0));
 		employeeList.add(newEmployee5);
+		
+		Employee newEmployee6 = new Employee(6,"Shazia","Naeem",3,38000.0);
+		tax = Tax.calculateTax(38000.0);
+		newEmployee6.setPayableTax(tax);
+		newEmployee6.setPostTaxSalary(Tax.calculatePostTaxSalary(tax, 38000.0));
+		employeeList.add(newEmployee6);
 	}
 	
 	public static void main(String[] args){
 		
 		Tax.getInstance();
-		test();
-		
+		test(); // Inserts test people and departments
 		welcomeMessage();
 		mainMenu();
 		exit();
 	}
 
 }
-
