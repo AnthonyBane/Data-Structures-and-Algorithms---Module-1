@@ -319,9 +319,6 @@ class Tax{
 			} else if (salary > taxBand.getUpperBound()) {
 				tax = tax + ((taxBand.getUpperBound() - taxBand.getLowerBound()) * taxBand.getTaxRate());
 			}
-			if (salary < taxBand.getLowerBound()) {
-				break;
-			}
 		}
 		
 		return tax;
@@ -409,27 +406,27 @@ class Sort{
 	// Sort function to abstract sorting functionality from the PayrollManagement class
 	
 	private static Integer[] toSortElementLocation;
-	private static Double[] toSortValue;
+	private static Double[] toSortValues;
 	
 	private static void swap(Integer i, Integer j) {
 		// A utility function to swap two elements in element array and value array
     	Integer tempInteger = toSortElementLocation[i];
         toSortElementLocation[i] = toSortElementLocation[j];
         toSortElementLocation[j] = tempInteger;
-        Double tempDouble = toSortValue[i];
-        toSortValue[i] = toSortValue[j];
-        toSortValue[j] = tempDouble;
+        Double tempDouble = toSortValues[i];
+        toSortValues[i] = toSortValues[j];
+        toSortValues[j] = tempDouble;
     }
   
     private static int partition(Integer low, Integer high) {
     	// QuickSort Partition function
     	
-        Double pivot = toSortValue[high];
+        Double pivot = toSortValues[high];
         Integer i = (low - 1);
   
         for (Integer j = low; j < high; j++) {
         	
-            if (toSortValue[j] <= pivot) {
+            if (toSortValues[j] <= pivot) {
                 i++;
                 swap(i, j);
             }
@@ -450,40 +447,25 @@ class Sort{
         } 
     }
 	
-	private static void quickSortSetup(ArrayList<Employee> toSort, Integer type){
+	private static void quickSortSetup(Double[] values){
 		/*
 		 * Returns a sorted array of element IDs which correspond to the element 
-		 * position of Employees list. Using two integer arrays allows for the values
-		 * to depend on which attribute we with to sort by and the array of elements
-		 * allows for fast lookup of the elements when returned.
+		 * position of the value in the parameter values.
 		 * 
-		 * No sorting of the underlying data structure if therefore needed or required.
-		 * This is not a perfect solution but shows an implemented sorting algorithm.
-		 * This could also be done by making Employee a comparator class and using
-		 * the built-in Collections.sort() which implements a merge-sort algorithm. 
+		 * This abstracts the Employee dependency allowing this algorithm to work
+		 * for any double type array list.
+		 * 
+		 * Indices return allows for O(1) lookup to print a sorted list.  
+		 * 
+		 * The is no sorting of an underlying data structure.		 * 
 		 */
 		
-		toSortElementLocation = new Integer[toSort.size()];
-		toSortValue = new Double[toSort.size()];
+		toSortElementLocation = new Integer[values.length];
+		toSortValues = values;
 
-		// Gather values to sort or raise invalid menu option error
-		if (type == 1) {
-			// Sort by department
-			for (int i = 0; i < toSort.size(); i++) {
-				toSortValue[i] = (double)toSort.get(i).getDepartment();
-			} 
-		} else if (type == 2) {
-			// Sort by salary
-			for (int i = 0; i < toSort.size(); i++) {
-				toSortValue[i] = toSort.get(i).getSalary();
-			} 
-		} else {
-			throw new IllegalArgumentException("Invalid sorting option. 1 - sort by department, 2 - sort by salary.");
-		}
-		
 		// Gather employee ID element locations
-		for (int i = 0; i < toSort.size(); i++) {
-			toSortElementLocation[i] = toSort.get(i).getEmployeeID() - 1;
+		for (int i = 0; i < values.length; i++) {
+			toSortElementLocation[i] = i;
 		}
 		
 	}
@@ -497,10 +479,10 @@ class Sort{
 		// Does nothing, private constructor is convention.
 	}
 	
-	public static void sort(ArrayList<Employee> toSort, Integer type) {
+	public static void sort(Double[] values) {
 		// Initiates QuickSort processes
 		
-		quickSortSetup(toSort, type);
+		quickSortSetup(values);
 		quickSort(0, toSortElementLocation.length - 1);
 		
 	}
@@ -832,6 +814,8 @@ public class PayrollManagement {
 									,returnToMain};
 			int menuOption = getUserChoice(stringArray, stringArray.length - 1);
 			
+			Double[] values = new Double[employeeList.size()];
+			
 			switch(menuOption) {
 				case 1:
 					if(departmentList.isEmpty()) {
@@ -867,8 +851,14 @@ public class PayrollManagement {
 						break;
 					}
 					clearScreen();
-					System.out.println("\nEmployee details listed by department:");
-					Sort.sort(employeeList,1);
+					
+					// Gathers values to sort, converted to Double type for sorting algorithm reuse
+					for (int i = 0; i < employeeList.size(); i++) {
+						values[i] = (double)employeeList.get(i).getDepartment();
+					}
+
+					Sort.sort(values);
+					System.out.println("\nEmployee details listed by department:");					
 					displayEmployees(Sort.getSortedArray());
 					break;
 				case 6:
@@ -876,7 +866,13 @@ public class PayrollManagement {
 						break;
 					}
 					clearScreen();
-					Sort.sort(employeeList,2);
+
+					// Gathers values to sort
+					for (int i = 0; i < employeeList.size(); i++) {
+						values[i] = employeeList.get(i).getSalary();
+					}
+					
+					Sort.sort(values);
 					System.out.println("\nEmployee details listed by salary:");
 					displayEmployees(Sort.getSortedArray());
 					break;
