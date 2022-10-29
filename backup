@@ -447,31 +447,8 @@ class Sort{
         } 
     }
 	
-	private static void quickSortSetup(Double[] values){
-		/*
-		 * Returns a sorted array of element IDs which correspond to the element 
-		 * position of the value in the parameter values.
-		 * 
-		 * This abstracts the Employee dependency allowing this algorithm to work
-		 * for any double type array list.
-		 * 
-		 * Indices return allows for O(1) lookup to print a sorted list.  
-		 * 
-		 * The is no sorting of an underlying data structure.		 * 
-		 */
-		
-		toSortElementLocation = new Integer[values.length];
-		toSortValues = values;
-
-		// Gather employee ID element locations
-		for (int i = 0; i < values.length; i++) {
-			toSortElementLocation[i] = i;
-		}
-		
-	}
-	
 	public static Integer[] getSortedArray() {
-		// Returns sorted array of integers referencing ArrayList indices 
+		// Returns sorted array of integers referencing element indices 
 		return toSortElementLocation;
 	}
 	
@@ -479,10 +456,15 @@ class Sort{
 		// Does nothing, private constructor is convention.
 	}
 	
-	public static void sort(Double[] values) {
+	public static void sort(Double[] values, Integer[] elements) {
 		// Initiates QuickSort processes
 		
-		quickSortSetup(values);
+		toSortValues = new Double[values.length];
+		toSortElementLocation = new Integer[values.length];
+		
+		toSortValues = values;
+		toSortElementLocation = elements;
+		
 		quickSort(0, toSortElementLocation.length - 1);
 		
 	}
@@ -815,6 +797,7 @@ public class PayrollManagement {
 			int menuOption = getUserChoice(stringArray, stringArray.length - 1);
 			
 			Double[] values = new Double[employeeList.size()];
+			Integer[] elements = new Integer[employeeList.size()];
 			
 			switch(menuOption) {
 				case 1:
@@ -853,11 +836,13 @@ public class PayrollManagement {
 					clearScreen();
 					
 					// Gathers values to sort, converted to Double type for sorting algorithm reuse
+					// Gathers element ids
 					for (int i = 0; i < employeeList.size(); i++) {
 						values[i] = (double)employeeList.get(i).getDepartment();
+						elements[i] = i;
 					}
 
-					Sort.sort(values);
+					Sort.sort(values, elements);
 					System.out.println("\nEmployee details listed by department:");					
 					displayEmployees(Sort.getSortedArray());
 					break;
@@ -867,12 +852,13 @@ public class PayrollManagement {
 					}
 					clearScreen();
 
-					// Gathers values to sort
+					// Gathers values and element ids to sort
 					for (int i = 0; i < employeeList.size(); i++) {
 						values[i] = employeeList.get(i).getSalary();
+						elements[i] = i;
 					}
 					
-					Sort.sort(values);
+					Sort.sort(values, elements);
 					System.out.println("\nEmployee details listed by salary:");
 					displayEmployees(Sort.getSortedArray());
 					break;
@@ -1270,5 +1256,4 @@ public class PayrollManagement {
 		mainMenu();
 		exit();
 	}
-
 }
